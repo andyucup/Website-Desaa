@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Laundry Profesional</title>
+    <style>
+        /* Global Style */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        body {
+            background: linear-gradient(to right, #003973, #E5E5BE);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            color: #333;
+        }
+        .container {
+            width: 400px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        h2 {
+            color: #003973;
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        label {
+            font-weight: 600;
+            display: block;
+            margin-top: 10px;
+            text-align: left;
+            color: #444;
+        }
+        select, input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        input[readonly] {
+            background: #f5f5f5;
+            color: #333;
+            font-weight: bold;
+        }
+        button {
+            width: 100%;
+            background: #007bff;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #0056b3;
+            transform: scale(1.05);
+        }
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            width: 320px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+            animation: scaleUp 0.3s ease-in-out;
+        }
+        .modal-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        .modal-success {
+            color: #28a745;
+        }
+        .modal-fail {
+            color: #dc3545;
+        }
+        .modal button {
+            margin-top: 12px;
+            width: 100%;
+            background: #28a745;
+            border: none;
+            padding: 10px;
+            color: white;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes scaleUp {
+            from { transform: scale(0.8); }
+            to { transform: scale(1); }
+        }
+
+        /* Tabel Data */
+        table {
+            width: 80%;
+            margin-top: 30px;
+            border-collapse: collapse;
+            text-align: center;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+        }
+        th {
+            background-color: #003973;
+            color: white;
+            text-transform: uppercase;
+        }
+        td {
+            background-color: #f9f9f9;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Aplikasi Laundry Profesional</h2>
+
+        <label>Jenis Cucian:</label>
+        <select id="jenisCucian" onchange="hitungTotal()">
+            <option value="5000">Cuci Kering - Rp 5000/kg</option>
+            <option value="4000">Cuci Basah - Rp 4000/kg</option>
+            <option value="3000">Setrika - Rp 3000/kg</option>
+        </select>
+
+        <label>Harga per Kg:</label>
+        <input type="text" id="hargaPerKg" readonly>
+
+        <label>Berat (kg):</label>
+        <input type="number" id="berat" placeholder="Masukkan Berat" oninput="hitungTotal()">
+
+        <label>Total Harga:</label>
+        <input type="text" id="totalHarga" readonly>
+
+        <label>Bayar:</label>
+        <input type="number" id="bayar" placeholder="Masukkan Uang Bayar">
+
+        <button onclick="transaksi()">Proses Transaksi</button>
+    </div>
+
+    <!-- Modal Konfirmasi -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div id="modalIcon" class="modal-icon"></div>
+            <h3 id="modalTitle"></h3>
+            <p id="modalText"></p>
+            <button onclick="simpanTransaksi()">Oke</button>
+        </div>
+    </div>
+
+    <!-- Tabel Data Tersimpan -->
+    <div id="dataTersimpan" style="margin-top: 20px; width: 80%; overflow-x: auto;">
+        <h3>Data Transaksi Tersimpan</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Total Harga</th>
+                    <th>Total Bayar</th>
+                    <th>Total Kembalian</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="tabelTransaksi"></tbody>
+        </table>
+    </div>
+
+    <script>
+        function formatRupiah(angka) {
+            return angka.toLocaleString('id-ID');
+        }
+
+        function hitungTotal() {
+            let harga = parseInt(document.getElementById("jenisCucian").value);
+            let berat = parseFloat(document.getElementById("berat").value) || 0;
+            document.getElementById("hargaPerKg").value = "Rp " + formatRupiah(harga);
+            document.getElementById("totalHarga").value = "Rp " + formatRupiah(harga * berat);
+        }
+
+        function transaksi() {
+            let hargaPerKg = parseInt(document.getElementById("jenisCucian").value);
+            let berat = parseFloat(document.getElementById("berat").value) || 0;
+            let totalHarga = hargaPerKg * berat;
+            let bayar = parseInt(document.getElementById("bayar").value) || 0;
+            let modalIcon = document.getElementById("modalIcon");
+            let modalTitle = document.getElementById("modalTitle");
+            let modalText = document.getElementById("modalText");
+
+            if (bayar < totalHarga) {
+                modalIcon.innerHTML = "❌";
+                modalIcon.classList.add("modal-fail");
+                modalTitle.innerText = "Transaksi Gagal!";
+                modalText.innerHTML = `<strong>Total:</strong> Rp ${formatRupiah(totalHarga)}<br><strong>Bayar:</strong> Rp ${formatRupiah(bayar)}`;
+            } else {
+                let kembalian = bayar - totalHarga;
+                modalIcon.innerHTML = "✅";
+                modalIcon.classList.add("modal-success");
+                modalTitle.innerText = "Transaksi Berhasil!";
+                modalText.innerHTML = `<strong>Total:</strong> Rp ${formatRupiah(totalHarga)}<br><strong>Bayar:</strong> Rp ${formatRupiah(bayar)}<br><strong>Kembalian:</strong> Rp ${formatRupiah(kembalian)}`;
+
+                // Simpan transaksi ke localStorage
+                let transaksiData = {
+                    totalHarga: totalHarga,
+                    bayar: bayar,
+                    kembalian: kembalian
+                };
+                let transaksiList = JSON.parse(localStorage.getItem('transaksiList')) || [];
+                transaksiList.push(transaksiData);
+                localStorage.setItem('transaksiList', JSON.stringify(transaksiList));
+            }
+
+            document.getElementById("modal").style.display = "flex";
+        }
+
+        function simpanTransaksi() {
+            document.getElementById("modal").style.display = "none";
+            tampilkanDataTersimpan();
+        }
+
+        // Menampilkan transaksi yang telah tersimpan
+        function tampilkanDataTersimpan() {
+            let transaksiList = JSON.parse(localStorage.getItem('transaksiList')) || [];
+            let tabelTransaksi = document.getElementById('tabelTransaksi');
+            tabelTransaksi.innerHTML = ''; // Clear existing data
+            transaksiList.forEach((transaksi, index) => {
+                let row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>Rp ${formatRupiah(transaksi.totalHarga)}</td>
+                    <td>Rp ${formatRupiah(transaksi.bayar)}</td>
+                    <td>Rp ${formatRupiah(transaksi.kembalian)}</td>
+                    <td><button class="delete-btn" onclick="hapusTransaksi(${index})">Hapus</button></td>
+                `;
+                tabelTransaksi.appendChild(row);
+            });
+        }
+
+        // Hapus transaksi dari localStorage
+        function hapusTransaksi(index) {
+            let transaksiList = JSON.parse(localStorage.getItem('transaksiList')) || [];
+            transaksiList.splice(index, 1); // Hapus transaksi berdasarkan index
+            localStorage.setItem('transaksiList', JSON.stringify(transaksiList));
+            tampilkanDataTersimpan(); // Refresh tampilkan data
+        }
+
+        // Load transaksi data when page loads
+        window.onload = tampilkanDataTersimpan;
+    </script>
+
+</body>
+</html>
+ 
